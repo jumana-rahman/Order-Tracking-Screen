@@ -1,14 +1,31 @@
 import { useEffect, useRef, useState } from 'react'
-import { TbChevronDown, TbRefresh } from 'react-icons/tb'
+import { TbChevronDown, TbChevronRight } from 'react-icons/tb'
+import { Toaster, toast } from 'sonner'
 import DeliveryInfo from './components/DeliveryInfo'
 import DeliveryTimeline from './components/DeliveryTimeline'
 import Modal from './components/Modal'
 import OrderHeader from './components/OrderHeader'
 import ProductSummary from './components/ProductSummary'
+import StatePanel from './components/StatePanel'
 import StatusBadge from './components/StatusBadge'
+import SupportActions from './components/SupportActions'
 import { orders, SCENARIOS } from './data/orders'
 
 const VALID_SCENARIOS = SCENARIOS.map((item) => item.id)
+
+const SUPPORT_TOPICS = [
+  'Delivery is running late',
+  'My parcel has not arrived',
+  'I need to change my order',
+  'Something else',
+]
+
+const ISSUE_TYPES = [
+  'Order has not arrived',
+  'Parcel arrived damaged',
+  'Wrong item received',
+  'An item is missing from the parcel',
+]
 
 function readScenario() {
   const value = new URLSearchParams(window.location.search).get('scenario')
@@ -23,6 +40,10 @@ function phaseFor(scenario, attempt) {
   if (scenario === 'empty') return 'empty'
   if (scenario === 'error' && attempt === 0) return 'error'
   return 'ready'
+}
+
+function reference() {
+  return `DSP-${Math.floor(10000 + Math.random() * 90000)}`
 }
 
 function ScenarioPicker({ value, onChange }) {
@@ -40,7 +61,7 @@ function ScenarioPicker({ value, onChange }) {
             id="scenario"
             value={value}
             onChange={(event) => onChange(event.target.value)}
-            className="max-w-[14rem] appearance-none rounded-lg border border-line bg-card py-2 pr-9 pl-3 text-sm font-medium text-ink"
+            className="max-w-[13rem] appearance-none rounded-lg border border-line bg-card py-2 pr-9 pl-3 text-sm font-medium text-ink"
           >
             {SCENARIOS.map((item) => (
               <option key={item.id} value={item.id}>
@@ -55,6 +76,38 @@ function ScenarioPicker({ value, onChange }) {
         </div>
       </div>
     </div>
+  )
+}
+
+function ChoiceList({ options, onSelect }) {
+  return (
+    <ul className="grid gap-2">
+      {options.map((option) => (
+        <li key={option}>
+          <button
+            type="button"
+            onClick={() => onSelect(option)}
+            className="flex min-h-11 w-full items-center justify-between gap-2 rounded-xl border border-line bg-card px-3 text-left text-sm font-medium transition-colors hover:bg-canvas"
+          >
+            {option}
+            <TbChevronRight aria-hidden="true" className="size-4 shrink-0 text-muted" />
+          </button>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+function NoticePanel({ notice, onAction }) {
+  if (!notice) return null
+  return (
+    <StatePanel
+      variant={notice.tone}
+      title={notice.title}
+      body={notice.body}
+      actionLabel={notice.action?.label}
+      onAction={onAction}
+    />
   )
 }
 
@@ -84,16 +137,6 @@ function OrderDetails({ order }) {
         </div>
       ))}
     </dl>
-  )
-}
-
-function Placeholder({ label, className = '' }) {
-  return (
-    <div
-      className={`flex items-center justify-center rounded-2xl border border-dashed border-line text-sm text-muted ${className}`}
-    >
-      {label}
-    </div>
   )
 }
 
@@ -159,7 +202,24 @@ export default function App() {
     setReload((value) => value + 1)
   }
 
+  function submitIssue(type) {
+    setDialog(null)
+    toast.success('Report submitted', {
+      description: `${type} · Reference ${reference()}. We'll email you within 24 hours.`,
+    })
+  }
+
+  function submitTopic(topic) {
+    setDialog(null)
+    toast.success('Support request sent', {
+      description: `We'll reply about "${topic}" within one working day.`,
+    })
+  }
+
   const order = phase === 'ready' ? orders[scenario] : null
+  const noticeAction = order?.notice
+    ? () => setDialog(order.notice.action.dialog)
+    : undefined
 
   return (
     <div className="min-h-dvh bg-canvas">
@@ -168,9 +228,10 @@ export default function App() {
           {announcement}
         </p>
 
-        {phase === 'ready' ? (
+        {phase === 'ready' && order ? (
           <div className="flex flex-col gap-3">
             <OrderHeader orderId={order.id} />
+
             <section className="rounded-2xl border border-line bg-card p-4 shadow-sm sm:p-5">
               <StatusBadge status={order.status} label={order.statusLabel} />
               <h2 className="mt-3 text-xl font-semibold tracking-tight text-balance sm:text-2xl">
@@ -180,34 +241,53 @@ export default function App() {
                 {order.description}
               </p>
             </section>
+
             {order.timeline ? (
-              <DeliveryTimeline steps={order.timeline} />
+              <>
+                <DeliveryTimeline steps={order.timeline} />
+                <DeliveryInfo
+                  eta={order.eta}
+                  delayed={order.status === 'delayed'}
+                />
+                <NoticePanel notice={order.notice} onAction={noticeAction} />
+              </>
             ) : (
-              <Placeholder label="No tracking data" className="h-40 w-full" />
+              <>
+                <NoticePanel notice={order.notice} onAction={noticeAction} />
+                <DeliveryInfo eta={order.eta} />
+              </>
             )}
-            <DeliveryInfo eta={order.eta} delayed={order.status === 'delayed'} />
+
             <ProductSummary
               order={order}
               onViewDetails={() => setDialog('details')}
             />
-            <Placeholder label="Support actions" className="h-28 w-full" />
+
+            <SupportActions
+              onReportIssue={() => setDialog('report')}
+              onContactSupport={() => setDialog('support')}
+            />
+          </div>
+        ) : phase === 'loading' ? (
+          <div className="mt-16">
+            <StatePanel variant="loading" spin />
+          </div>
+        ) : phase === 'error' ? (
+          <div className="mt-16">
+            <StatePanel
+              variant="error"
+              actionLabel="Try again"
+              onAction={retry}
+            />
           </div>
         ) : (
-          <section className="mt-16 rounded-2xl border border-dashed border-line px-5 py-10 text-center">
-            <p className="text-sm text-muted">
-              {phase === 'loading' ? 'Loading your order' : `${phase} state`}
-            </p>
-            {phase === 'error' && (
-              <button
-                type="button"
-                onClick={retry}
-                className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl bg-ink px-4 text-sm font-medium text-white"
-              >
-                <TbRefresh aria-hidden="true" className="size-4" />
-                Try again
-              </button>
-            )}
-          </section>
+          <div className="mt-16">
+            <StatePanel
+              variant="empty"
+              actionLabel="Back to orders"
+              onAction={() => chooseScenario(lastOrder.current)}
+            />
+          </div>
         )}
 
         <ScenarioPicker value={scenario} onChange={chooseScenario} />
@@ -216,11 +296,51 @@ export default function App() {
       <Modal
         open={dialog === 'details'}
         title="Order details"
-        description={order ? `Placed ${order.placedOn}` : null}
+        description={order ? `Order ${order.id}` : null}
         onClose={() => setDialog(null)}
       >
         {order && <OrderDetails order={order} />}
       </Modal>
+
+      <Modal
+        open={dialog === 'report'}
+        title="Report an issue"
+        description="Tell us what went wrong and we will investigate."
+        onClose={() => setDialog(null)}
+      >
+        <ChoiceList options={ISSUE_TYPES} onSelect={submitIssue} />
+        <button
+          type="button"
+          onClick={() => setDialog(null)}
+          className="mt-3 min-h-11 w-full rounded-xl border border-line bg-card text-sm font-semibold transition-colors hover:bg-canvas"
+        >
+          Close
+        </button>
+      </Modal>
+
+      <Modal
+        open={dialog === 'support'}
+        title="How can we help?"
+        description="Choose a topic and our support team will pick it up."
+        onClose={() => setDialog(null)}
+      >
+        <ChoiceList options={SUPPORT_TOPICS} onSelect={submitTopic} />
+        <button
+          type="button"
+          onClick={() => setDialog(null)}
+          className="mt-3 min-h-11 w-full rounded-xl border border-line bg-card text-sm font-semibold transition-colors hover:bg-canvas"
+        >
+          Close
+        </button>
+      </Modal>
+
+      <Toaster
+        position="bottom-center"
+        richColors
+        closeButton
+        offset={24}
+        toastOptions={{ className: 'font-sans' }}
+      />
     </div>
   )
 }

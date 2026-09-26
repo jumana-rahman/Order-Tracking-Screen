@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { TbChevronDown, TbRefresh } from 'react-icons/tb'
+import DeliveryInfo from './components/DeliveryInfo'
+import DeliveryTimeline from './components/DeliveryTimeline'
 import OrderHeader from './components/OrderHeader'
 import StatusBadge from './components/StatusBadge'
 import { orders, SCENARIOS } from './data/orders'
@@ -143,8 +145,12 @@ export default function App() {
                 {order.description}
               </p>
             </section>
-            <Placeholder label="Delivery timeline" className="h-64 w-full" />
-            <Placeholder label="Delivery information" className="h-24 w-full" />
+            {order.timeline ? (
+              <DeliveryTimeline steps={order.timeline} />
+            ) : (
+              <Placeholder label="No tracking data" className="h-40 w-full" />
+            )}
+            <DeliveryInfo eta={order.eta} delayed={order.status === 'delayed'} />
             <Placeholder label="Product summary" className="h-24 w-full" />
             <Placeholder label="Support actions" className="h-28 w-full" />
           </div>

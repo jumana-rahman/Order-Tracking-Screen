@@ -1,8 +1,8 @@
 import {
-  TbBox,
+  TbDeviceLaptop,
+  TbDeviceWatch,
   TbHeadphones,
   TbPackage,
-  TbWatch,
 } from 'react-icons/tb'
 
 const normalOrder = {
@@ -77,7 +77,7 @@ const delayedOrder = {
     name: 'Fitness Tracker Watch',
     quantity: 1,
     price: '$129.00',
-    icon: TbWatch,
+    icon: TbDeviceWatch,
     tint: 'bg-warning-soft text-warning',
   },
   totals: { subtotal: '$129.00', shipping: 'Free', total: '$129.00' },
@@ -193,7 +193,7 @@ const noTrackingOrder = {
     name: 'Mechanical Keyboard',
     quantity: 1,
     price: '$118.00',
-    icon: TbBox,
+    icon: TbDeviceLaptop,
     tint: 'bg-canvas text-muted',
   },
   totals: { subtotal: '$118.00', shipping: '$5.00', total: '$123.00' },

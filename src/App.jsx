@@ -2,7 +2,9 @@ import { useEffect, useRef, useState } from 'react'
 import { TbChevronDown, TbRefresh } from 'react-icons/tb'
 import DeliveryInfo from './components/DeliveryInfo'
 import DeliveryTimeline from './components/DeliveryTimeline'
+import Modal from './components/Modal'
 import OrderHeader from './components/OrderHeader'
+import ProductSummary from './components/ProductSummary'
 import StatusBadge from './components/StatusBadge'
 import { orders, SCENARIOS } from './data/orders'
 
@@ -56,6 +58,35 @@ function ScenarioPicker({ value, onChange }) {
   )
 }
 
+function OrderDetails({ order }) {
+  const rows = [
+    ['Order ID', order.id],
+    ['Quantity', String(order.product.quantity)],
+    ['Payment', order.payment],
+    ['Subtotal', order.totals.subtotal],
+    ['Shipping', order.totals.shipping],
+    ['Total', order.totals.total],
+  ]
+
+  return (
+    <dl className="space-y-3 text-sm">
+      {rows.map(([label, value], index) => (
+        <div
+          key={label}
+          className={`flex justify-between gap-4 ${
+            index === rows.length - 1
+              ? 'border-t border-line pt-3 font-semibold'
+              : ''
+          }`}
+        >
+          <dt className="text-muted">{label}</dt>
+          <dd className="text-right font-medium">{value}</dd>
+        </div>
+      ))}
+    </dl>
+  )
+}
+
 function Placeholder({ label, className = '' }) {
   return (
     <div
@@ -71,6 +102,7 @@ export default function App() {
   const [phase, setPhase] = useState('loading')
   const [attempt, setAttempt] = useState(0)
   const [reload, setReload] = useState(0)
+  const [dialog, setDialog] = useState(null)
   const [announcement, setAnnouncement] = useState('')
   const lastOrder = useRef('normal')
   const initial = useRef({ scenario, attempt })
@@ -93,6 +125,7 @@ export default function App() {
       const next = readScenario()
       setScenario(next)
       setAttempt(0)
+      setDialog(null)
       setPhase(phaseFor(next, 0))
       setAnnouncement(`Showing ${labelFor(next)} scenario`)
     }
@@ -111,6 +144,7 @@ export default function App() {
     pushUrl(next)
     setScenario(next)
     setAttempt(0)
+    setDialog(null)
     setPhase(phaseFor(next, 0))
     setAnnouncement(`Showing ${labelFor(next)} scenario`)
   }
@@ -120,6 +154,7 @@ export default function App() {
     pushUrl(next)
     setScenario(next)
     setAttempt(1)
+    setDialog(null)
     setPhase('loading')
     setReload((value) => value + 1)
   }
@@ -151,7 +186,10 @@ export default function App() {
               <Placeholder label="No tracking data" className="h-40 w-full" />
             )}
             <DeliveryInfo eta={order.eta} delayed={order.status === 'delayed'} />
-            <Placeholder label="Product summary" className="h-24 w-full" />
+            <ProductSummary
+              order={order}
+              onViewDetails={() => setDialog('details')}
+            />
             <Placeholder label="Support actions" className="h-28 w-full" />
           </div>
         ) : (
@@ -174,6 +212,15 @@ export default function App() {
 
         <ScenarioPicker value={scenario} onChange={chooseScenario} />
       </main>
+
+      <Modal
+        open={dialog === 'details'}
+        title="Order details"
+        description={order ? `Placed ${order.placedOn}` : null}
+        onClose={() => setDialog(null)}
+      >
+        {order && <OrderDetails order={order} />}
+      </Modal>
     </div>
   )
 }

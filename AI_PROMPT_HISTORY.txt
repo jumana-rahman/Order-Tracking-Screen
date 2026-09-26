@@ -1,0 +1,5 @@
+OpenCode CLI:
+
+1. Read instructions.md completely before doing anything. First, analyze all requirements and divide the entire implementation into exactly 8 logical steps. The 8 steps should cover the complete project from setup through final QA/deployment readiness. Keep the plan simple, optimized, and appropriate for a small React + Vite + Tailwind CSS project. Avoid unnecessary architecture, dependencies, components, or features. Make sure the 8 steps collectively cover all required UI states, interactions, responsive behavior, accessibility, testing, README, and deployment requirements. Keep dependencies and codebase as small as reasonably possible.
+
+2. can you check if everything's done according to the requirement.

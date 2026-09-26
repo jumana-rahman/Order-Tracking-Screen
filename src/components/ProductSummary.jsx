@@ -19,9 +19,7 @@ export default function ProductSummary({ order, onViewDetails }) {
           <p className="text-sm leading-5 font-medium text-pretty">
             {product.name}
           </p>
-          <p className="mt-0.5 text-xs text-muted">
-            Qty {product.quantity} · {product.price}
-          </p>
+          <p className="mt-0.5 text-xs text-muted">Qty {product.quantity}</p>
         </div>
         <p className="shrink-0 text-sm font-semibold">{product.price}</p>
       </div>

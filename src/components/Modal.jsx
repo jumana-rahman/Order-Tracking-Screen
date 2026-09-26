@@ -8,6 +8,11 @@ export default function Modal({ open, title, description, onClose, children }) {
   const panelRef = useRef(null)
   const closeRef = useRef(null)
   const titleId = useId()
+  const onCloseRef = useRef(onClose)
+
+  useEffect(() => {
+    onCloseRef.current = onClose
+  }, [onClose])
 
   useEffect(() => {
     if (!open) return
@@ -20,7 +25,7 @@ export default function Modal({ open, title, description, onClose, children }) {
     function onKeyDown(event) {
       if (event.key === 'Escape') {
         event.stopPropagation()
-        onClose()
+        onCloseRef.current()
         return
       }
       if (event.key !== 'Tab') return
@@ -46,7 +51,7 @@ export default function Modal({ open, title, description, onClose, children }) {
       document.body.style.overflow = overflow
       previouslyFocused?.focus?.()
     }
-  }, [open, onClose])
+  }, [open])
 
   if (!open) return null
 
@@ -81,7 +86,7 @@ export default function Modal({ open, title, description, onClose, children }) {
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="-mt-1 -mr-1 flex size-9 shrink-0 items-center justify-center rounded-full text-muted transition-colors hover:bg-black/5"
+            className="-mt-1.5 -mr-1.5 flex size-11 shrink-0 items-center justify-center rounded-full text-muted transition-colors hover:bg-black/5"
           >
             <TbX aria-hidden="true" className="size-5" />
           </button>

@@ -49,19 +49,19 @@ function reference() {
 function ScenarioPicker({ value, onChange }) {
   return (
     <div className="mt-4 rounded-2xl border border-dashed border-line bg-card/60 p-3">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <label
           htmlFor="scenario"
           className="text-xs font-medium tracking-wide text-muted uppercase"
         >
           Demo scenario
         </label>
-        <div className="relative">
+        <div className="relative w-full sm:w-60">
           <select
             id="scenario"
             value={value}
             onChange={(event) => onChange(event.target.value)}
-            className="max-w-[13rem] appearance-none rounded-lg border border-line bg-card py-2 pr-9 pl-3 text-sm font-medium text-ink"
+            className="w-full appearance-none rounded-lg border border-line bg-card py-2 pr-9 pl-3 text-sm font-medium text-ink"
           >
             {SCENARIOS.map((item) => (
               <option key={item.id} value={item.id}>

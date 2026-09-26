@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { TbChevronDown, TbRefresh } from 'react-icons/tb'
+import OrderHeader from './components/OrderHeader'
+import StatusBadge from './components/StatusBadge'
 import { orders, SCENARIOS } from './data/orders'
 
 const VALID_SCENARIOS = SCENARIOS.map((item) => item.id)
@@ -120,6 +122,8 @@ export default function App() {
     setReload((value) => value + 1)
   }
 
+  const order = phase === 'ready' ? orders[scenario] : null
+
   return (
     <div className="min-h-dvh bg-canvas">
       <main className="mx-auto w-full max-w-[430px] px-4 pt-4 pb-16 sm:px-5 lg:max-w-lg lg:py-10">
@@ -129,8 +133,16 @@ export default function App() {
 
         {phase === 'ready' ? (
           <div className="flex flex-col gap-3">
-            <Placeholder label="Header" className="h-14 w-full" />
-            <Placeholder label="Current status" className="h-28 w-full" />
+            <OrderHeader orderId={order.id} />
+            <section className="rounded-2xl border border-line bg-card p-4 shadow-sm sm:p-5">
+              <StatusBadge status={order.status} label={order.statusLabel} />
+              <h2 className="mt-3 text-xl font-semibold tracking-tight text-balance sm:text-2xl">
+                {order.headline}
+              </h2>
+              <p className="mt-1.5 text-sm text-pretty text-muted">
+                {order.description}
+              </p>
+            </section>
             <Placeholder label="Delivery timeline" className="h-64 w-full" />
             <Placeholder label="Delivery information" className="h-24 w-full" />
             <Placeholder label="Product summary" className="h-24 w-full" />
